@@ -2,7 +2,11 @@ package com.lvpb.miaosha.controller;
 
 import com.lvpb.miaosha.model.db.Goods;
 import com.lvpb.miaosha.model.db.MiaoshaUser;
+import com.lvpb.miaosha.model.redis.BasePrefix;
+import com.lvpb.miaosha.model.redis.GoodsKey;
 import com.lvpb.miaosha.service.GoodsService;
+import com.lvpb.miaosha.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,7 +14,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Controller
@@ -19,6 +27,13 @@ public class GoodsController
 {
     @Autowired
     private GoodsService goodsService;
+
+    @Autowired
+    private RedisOperator redisOperator;
+
+    /** thymeleaf框架提供的手动渲染 */
+    @Autowired
+    private ThymeleafViewResolver thymeleafViewResolver;
     /**
      *  cookieValue 是前端发送给后端的，但是有时候，手机端不会通过cookie把用户信息发送过来
      *  这时候就需要通过明面上的参数token来获取，也就是说出现这样一种情况，先从cookie中获取，如果没有
@@ -48,35 +63,50 @@ public class GoodsController
 //        return "goods_list";
 //    }
 
-
     @RequestMapping(value="/to_list", produces="text/html")
-    public String toList(Model model,MiaoshaUser miaoshaUser)
+    @ResponseBody
+    public String toList(HttpServletRequest request,
+                         HttpServletResponse response,
+                         Model model,MiaoshaUser miaoshaUser)
     {
         model.addAttribute("user",miaoshaUser);
         List<Goods> goods = goodsService.selectAll();
         model.addAttribute("goodsList",goods);
-        return "goods_list";
+
+        /**
+         * 如果redis中存在该页面的缓存，就直接从redis中获取缓存页面，返回
+         */
+        String html = redisOperator.get(GoodsKey.getGoodsList,"",String.class);
+        if(!StringUtils.isEmpty(html))
+        {
+            return html;
+        }
+
+        //手动渲染 入缓存
+        html = viewResolverManual(request,response,model,
+                GoodsKey.getGoodsList,
+                "",
+                "goods_list");
+
+        return html;
     }
 
-
-    @RequestMapping(value = "/all",method = RequestMethod.GET)
-    @ResponseBody
-    public List<Goods> selectAll()
-    {
-        return goodsService.selectAll();
-    }
-
-    @RequestMapping(value = "/selectById/{goodsId}",method = RequestMethod.GET)
-    @ResponseBody
-    public Goods selectByPrimaryKey(@PathVariable("goodsId") Long goodsId)
-    {
-        return goodsService.selectByPrimaryKey(goodsId);
-    }
-
+    /** URL 缓存 */
     @RequestMapping(value="/to_detail/{goodsId}", produces="text/html", method = RequestMethod.GET)
-    public String toDetail(Model model, MiaoshaUser miaoshaUser,
+    @ResponseBody
+    public String toDetail(HttpServletRequest request,
+                           HttpServletResponse response,
+                           Model model, MiaoshaUser miaoshaUser,
                            @PathVariable("goodsId") long goodsId)
     {
+        // 取缓存
+        String html = redisOperator.get(GoodsKey.getGoodsDetail,""+goodsId,String.class);
+        if(!StringUtils.isEmpty(html))
+        {
+            return html;
+        }
+
+        //手动渲染
         model.addAttribute("user",miaoshaUser);
         Goods goods = goodsService.selectByPrimaryKey(goodsId);
 
@@ -110,6 +140,47 @@ public class GoodsController
         model.addAttribute("goods",goods);
         model.addAttribute("miaoshaStatus",miaoshaStatus);
         model.addAttribute("remainSeconds",remainSeconds);
-        return "goods_detail";
+
+        //手动渲染 入缓存
+        html = viewResolverManual(request,response,model,
+                                  GoodsKey.getGoodsDetail,
+                             ""+goodsId,
+                         "goods_detail");
+
+
+        return html;
+    }
+
+
+    /**
+     * @Note  负责进行页面的手动渲染，并将渲染的结果返回，如果渲染成功，缓存到redis中
+     * @param request
+     * @param response
+     * @param model
+     * @param basePrefix    Redis中key的前缀
+     * @param keys          Redis中页面缓存或URL缓存的key
+     * @param template      渲染的页面模板名称
+     * @return
+     */
+    private String viewResolverManual(HttpServletRequest request,
+                                      HttpServletResponse response,
+                                      Model model,
+                                      BasePrefix basePrefix,
+                                      String keys,
+                                      String template)
+    {
+        WebContext webContext = new WebContext(request,response,
+                request.getServletContext(),
+                request.getLocale(),
+                model.asMap());
+        //两个参数  { 模板名称（html页面名称） context（包含上面业务数据的完整上下文）  }
+        String html = thymeleafViewResolver.getTemplateEngine().process(template,webContext);
+
+        if(!StringUtils.isEmpty(html))
+        {
+            redisOperator.set(basePrefix,keys,html);
+        }
+
+        return html;
     }
 }
