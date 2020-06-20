@@ -62,6 +62,13 @@ public class RedisOperator
         return stringRedisTemplate.hasKey(realKey);
     }
 
+    //清楚对象
+    public boolean delete(KeyPrefix prefix,String key)
+    {
+        String realKey = prefix.getPrefix() + key;
+        return stringRedisTemplate.delete(realKey);
+    }
+
     /**
      * 原子操作增加key
      * @param prefix 前缀
@@ -71,6 +78,7 @@ public class RedisOperator
      */
     public long incr(KeyPrefix prefix,String key,long delta)
     {
+        exists(prefix,key);
         String realKey = prefix.getPrefix() + key;
         return redisTemplate.opsForValue().increment(realKey,delta);
     }

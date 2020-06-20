@@ -42,6 +42,62 @@ public class MiaoshaUserService
         return miaoshaUser;
     }
 
+    public MiaoshaUser getByNickname(String nickname)
+    {
+        // 取缓存 { MiaoshaUserKey:nickname{nickname} } "类名" + ":" + "key逻辑名字" + "key值"
+        MiaoshaUser miaoshaUser = redisOperator.get(MiaoshaUserKey.getByNickName,""+nickname,MiaoshaUser.class);
+        if(miaoshaUser != null)
+        {
+            return miaoshaUser;
+        }
+
+        HashMap<String,Object> hashMap = new HashMap<>();
+        hashMap.put("nickname",nickname);
+        List<MiaoshaUser> miaoshaUsers = miaoshaUserMapper.selectListByCon(hashMap);
+        if(miaoshaUsers.size() <= 0)
+            return null;
+
+        miaoshaUser = miaoshaUsers.get(0);
+        // 缓存
+        redisOperator.set(MiaoshaUserKey.getByNickName,""+nickname,miaoshaUser);
+        return miaoshaUser;
+    }
+
+    /**
+     *
+     * @param token     token 用于更新redis
+     * @param nickname  手机号
+     * @param formpass  修改后的密码
+     * @return
+     *
+     * 为啥这里新创建一个对象去更新，而不是直接使用旧对象
+     * 因为我们这里采用的方法是updateSelective，旧对象中所有的属性都可能有值，我们如果更新的话会全部更新，
+     * 而更新的越多，效率就越差，对此我们新创建一个对象，只把要更新的内容放进去，然后局部更新就好了
+     */
+    public boolean updatePassword(String token,String nickname,String formpass)
+    {
+        // 获取旧的数据
+        MiaoshaUser miaoshaUser = getByNickname(nickname);
+        if(miaoshaUser == null)
+            return false;
+
+        // 更新数据库 局部更新
+        MiaoshaUser miaoshaUserUpdate = new MiaoshaUser();
+        miaoshaUserUpdate.setId(miaoshaUser.getId());
+        miaoshaUserUpdate.setPassword(MD5Util.formPassToDBPass(formpass,miaoshaUser.getSalt()));
+        miaoshaUserMapper.updateByPrimaryKeySelective(miaoshaUserUpdate);
+
+        //清除缓存，所有该用户的信息都要被清除掉，该用户可能的所有缓存有两类：
+        // 1. 用token标记的 这种不能直接删除，不然无法登录，应该更新redis中的缓存
+        //    key : [ MiaoshaUserKey:tk{tokenValue} ]
+        miaoshaUser.setPassword(miaoshaUserUpdate.getPassword());
+        redisOperator.set(MiaoshaUserKey.token,token,miaoshaUser);
+        // 2. 用nickname标记的
+        //    key : [ MiaoshaUserkey:nickname{nickanameValue}]
+        redisOperator.delete(MiaoshaUserKey.getByNickName,nickname);
+        return true;
+    }
+
     private void addCookie(MiaoshaUser miaoshaUser, HttpServletResponse response,String token)
     {
         /** key:value --- {tk:token : miaoshaUser} */

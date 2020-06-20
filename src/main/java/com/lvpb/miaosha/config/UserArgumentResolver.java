@@ -60,7 +60,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver
         }
         String token = StringUtils.isEmpty(paramToken)?cookieToken:paramToken;
         MiaoshaUser miaoshaUser = miaoshaUserService.getByToken(response,token);
-        System.out.println("this is aop and user is : " + miaoshaUser + "and the token is " + token);
+//        System.out.println("this is aop and user is : " + miaoshaUser + "and the token is " + token);
         return miaoshaUser;
     }
 
