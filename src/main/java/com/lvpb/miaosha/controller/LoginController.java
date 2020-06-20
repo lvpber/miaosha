@@ -1,9 +1,8 @@
 package com.lvpb.miaosha.controller;
 
-import com.lvpb.miaosha.model.result.CodeMsg;
 import com.lvpb.miaosha.model.result.Result;
 import com.lvpb.miaosha.service.LoginService;
-import com.lvpb.miaosha.utils.ValidatorUtil;
+import com.lvpb.miaosha.service.MiaoshaUserService;
 import com.lvpb.miaosha.vo.LoginVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,6 +19,9 @@ public class LoginController
     @Autowired
     private LoginService loginService;
 
+    @Autowired
+    private MiaoshaUserService miaoshaUserService;
+
     @RequestMapping("/to_login")
     public String toLogin()
     {
@@ -27,6 +29,11 @@ public class LoginController
         return "login";
     }
 
+
+    /**
+     * 5000 * 10
+     * QPS : 830
+     * */
     @RequestMapping("/do_login")
     @ResponseBody
     public Result<Boolean> doLogin(HttpServletResponse response, @Valid LoginVo loginVo)
@@ -52,5 +59,12 @@ public class LoginController
 //        System.out.println("this is Login Controller.login function");
         System.out.println(loginService.login(response,loginVo));
         return Result.success(true);
+    }
+
+    @RequestMapping("/create_token")
+    @ResponseBody
+    public String createToken(HttpServletResponse response, @Valid LoginVo loginVo) {
+        String token = miaoshaUserService.createToken(response, loginVo);
+        return token;
     }
 }

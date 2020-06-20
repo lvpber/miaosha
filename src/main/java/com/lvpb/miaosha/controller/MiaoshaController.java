@@ -30,6 +30,10 @@ public class MiaoshaController
     @Autowired
     private MiaoshaService miaoshaService;
 
+    /**
+     * 5000 * 10
+     * QPS : 1091
+     * */
     @RequestMapping(value = "do_miaosha",method = RequestMethod.POST)
     public String do_miaosha(Model model, MiaoshaUser miaoshaUser,
                              @RequestParam("goodsId") long goodsId)

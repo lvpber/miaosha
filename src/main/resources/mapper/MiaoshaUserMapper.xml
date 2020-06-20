@@ -24,6 +24,7 @@
       #{salt,jdbcType=VARCHAR}, #{head,jdbcType=VARCHAR}, #{registerDate,jdbcType=VARCHAR}, 
       #{lastLoginDate,jdbcType=VARCHAR}, #{loginCount,jdbcType=INTEGER})
   </insert>
+
   <insert id="insertSelective" parameterType="com.lvpb.miaosha.model.db.MiaoshaUser" >
     insert into miaosha_user
     <trim prefix="(" suffix=")" suffixOverrides="," >
@@ -80,6 +81,17 @@
     </trim>
   </insert>
 
+  <insert id="insertBatch">
+    INSERT INTO miaosha_user (id, password, nickname,
+    salt, head, register_date,
+    last_login_date, login_count)
+    VALUES
+    <foreach collection="list" item="one" separator=",">
+      (#{one.id},#{one.password},#{one.nickname},#{one.salt},
+      #{one.head}, #{one.registerDate},#{one.lastLoginDate},#{one.loginCount})
+    </foreach>
+  </insert>
+
   <select id="selectAll" resultMap="BaseResultMap">
     SELECT
     <include refid="Base_Column_List"/>
@@ -93,5 +105,37 @@
     from miaosha_user u
     where u.id = #{id,jdbcType=BIGINT}
   </select>
-  
+
+
+  <select id="selectListByCon" parameterType="map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from miaosha_user
+    where 1 = 1
+    <if test="id != null">
+      and id = #{id,jdbcType=BIGINT}
+    </if>
+    <if test="nickname != null">
+      and nickname = #{nickname,jdbcType=VARCHAR}
+    </if>
+    <if test="password != null">
+      and password = #{password,jdbcType=VARCHAR}
+    </if>
+    <if test="salt != null">
+      and salt = #{salt,jdbcType=VARCHAR}
+    </if>
+    <if test="head != null">
+      and head = #{head,jdbcType=VARCHAR}
+    </if>
+    <if test="registerDate != null">
+      and register_date = #{registerDate,jdbcType=VARCHAR}
+    </if>
+    <if test="lastLoginDate != null">
+      and last_login_date = #{lastLoginDate,jdbcType=VARCHAR}
+    </if>
+    <if test="loginCount != null">
+      and login_count = #{loginCount,jdbcType=INTEGER}
+    </if>
+  </select>
+
 </mapper>

@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.List;
 
 @Service
 public class LoginService
@@ -22,7 +24,6 @@ public class LoginService
 
     @Autowired
     private MiaoshaUserMapper miaoshaUserMapper;
-    //
 
     /** 用于存储用户信息 */
     @Autowired
@@ -38,10 +39,14 @@ public class LoginService
         String mobile = loginVo.getMobile();
         String password = loginVo.getPassword();
 
-        MiaoshaUser miaoshaUser = miaoshaUserMapper.selectByPrimaryKey(Long.parseLong(mobile));
+        HashMap<String , Object> hashMap = new HashMap<>();
+        hashMap.put("nickname",mobile);
+        List<MiaoshaUser> miaoshaUsers = miaoshaUserMapper.selectListByCon(hashMap);
 
-        if(miaoshaUser == null)
+        if(miaoshaUsers.size() == 0)
             throw new GlobalException(CodeMsg.MOBILE_NOT_EXIST);
+
+        MiaoshaUser miaoshaUser = miaoshaUsers.get(0);
 
         //验证密码
         String realPass = miaoshaUser.getPassword();

@@ -8,6 +8,7 @@ import com.lvpb.miaosha.model.redis.UserKey;
 import com.lvpb.miaosha.model.result.Result;
 import com.lvpb.miaosha.model.result.User;
 import com.lvpb.miaosha.utils.RedisOperator;
+import com.lvpb.miaosha.utils.UserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -95,5 +96,17 @@ public class DemoController
     public Result<MiaoshaUser> info(Model model, MiaoshaUser miaoshaUser)
     {
         return Result.success(miaoshaUser);
+    }
+
+
+    @Autowired
+    private UserUtil userUtil;
+
+    @RequestMapping("/addUser")
+    @ResponseBody
+    public String insertUser() throws Exception
+    {
+        userUtil.createUser(5000);
+        return "success";
     }
 }

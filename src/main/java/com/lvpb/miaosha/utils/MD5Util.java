@@ -14,7 +14,7 @@ public class MD5Util
     }
 
     //前端输入的密码，进行MD5加密的算法
-    public static  String inputPassFormPass ( String  inputPass) {
+    public static  String inputPassToFormPass ( String  inputPass) {
         String str = "" + salt.charAt(0) + salt.charAt(2)+ inputPass + salt.charAt(5) + salt.charAt(4) ;
         return md5(str);
     }
@@ -26,7 +26,7 @@ public class MD5Util
     }
 
     public static  String inputPassToDBPass ( String  inputPass ,String saltDB ) {
-        String formPass = inputPassFormPass(inputPass);
+        String formPass = inputPassToFormPass(inputPass);
         String dbPass = formPassToDBPass(formPass ,saltDB ) ;
         return dbPass ;
     }
