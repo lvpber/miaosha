@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    # jdbc相关内容
+    # url: jdbc:mysql://115.236.52.123:8333/robots_dev?serverTimezone=UTC
+    url: jdbc:mysql://10.1.1.81:3306/miaosha?serverTimezone=UTC
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: mysql2333
+    # 使用druid数据源
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 1
+      min-idle: 3
+      max-active: 20
+      # 连接等待超时时间
+      max-wait: 60000
+      # 间隔多久进行一次检测，检测需要关闭的空闲连接，单位毫秒
+      time-between-eviction-runs-millis: 60000
+      # 配置一个链接在池中最小生存时间
+      min-evictable-idle-time-millis: 30000
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # 是否缓存preparedStatement，打开PSCache，并且指定每一个连接上PSCache的大小，官方建议MySQL下关闭，如果用SQL防火墙，建议打开
+      # pool-prepared-statements: true
+      # max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的filters，去掉后监控界面sql无法统计
+      # filters: stat,wall,slf4j
+      # 通过connectProperties属性打开mergeSqk功能，慢sql记录
+      # connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+
+  #redis配置
+  redis:
+    #杭研院redis
+    host: 192.168.0.67
+    port: 6379
+    password: redis2333
+    timeout: 5000
+    database: 0
+    jedis:
+      pool:
+        max-active: 10
+        max-idle: 10
+        max-wait: 3
