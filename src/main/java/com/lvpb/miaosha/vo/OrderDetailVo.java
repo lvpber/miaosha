@@ -1,15 +1,14 @@
 package com.lvpb.miaosha.vo;
 
 import com.lvpb.miaosha.model.db.Goods;
+import com.lvpb.miaosha.model.db.OrderInfo;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 @Setter
-public class GoodsVo extends Goods
+public class OrderDetailVo
 {
-    private Integer stockCount;
-    private Long startDate;
-    private Long endTime;
+    private Goods goods;
+    private OrderInfo orderInfo;
 }

@@ -136,4 +136,10 @@
     </if>
   </select>
 
+  <update id="reduceStock" parameterType="java.lang.Long">
+    update miaosha_goods
+    set stock_count = stock_count - 1
+    where id = #{id,jdbcType=BIGINT} and stock_count > 0
+  </update>
+
 </mapper>

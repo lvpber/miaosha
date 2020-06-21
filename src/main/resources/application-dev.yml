@@ -28,6 +28,17 @@ spring:
       # filters: stat,wall,slf4j
       # 通过connectProperties属性打开mergeSqk功能，慢sql记录
       # connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+  #static spring对一些静态文件的处理
+  resources:
+    add-mappings: true                    #启用
+    cache:
+      period: 3600                        #缓存时间
+    chain:
+      cache: true                         #
+      enabled: true
+      html-application-cache: true        #启用html5的application cache
+      compressed: true
+    static-locations: classpath:/static/
 
   #redis配置
   redis:

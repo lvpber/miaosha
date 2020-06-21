@@ -156,10 +156,7 @@ public class GoodsController
     /** URL 缓存 */
     @RequestMapping(value="/detail/{goodsId}", method = RequestMethod.GET)
     @ResponseBody
-    public Result<GoodsDetailVo> goodsDetail(HttpServletRequest request,
-                                          HttpServletResponse response,
-                                          Model model, MiaoshaUser miaoshaUser,
-                                          @PathVariable("goodsId") long goodsId)
+    public Result<GoodsDetailVo> goodsDetail(MiaoshaUser miaoshaUser,@PathVariable("goodsId") long goodsId)
     {
         Goods goods = goodsService.selectByPrimaryKey(goodsId);
 
@@ -170,10 +167,6 @@ public class GoodsController
 
         int miaoshaStatus = 0;
         int remainSeconds = 0;
-
-        System.out.println("当前时间 " + now);
-        System.out.println("秒杀开始时间 " + startAt);
-        System.out.println("秒杀结束时间 " + endAt);
 
         if(now < startAt)
         {

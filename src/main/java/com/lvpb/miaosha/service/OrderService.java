@@ -23,13 +23,17 @@ public class OrderService
     @Autowired
     private OrderInfoMapper orderInfoMapper;
 
-    public List<MiaoshaOrder> selectListByCon(long goodsId,long userId)
+    public List<MiaoshaOrder> selectMOByGoodsIdAndUserId(long goodsId,long userId)
     {
         HashMap<String,Object> hashMap = new HashMap<>();
         hashMap.put("userId",userId);
         hashMap.put("goodsId",goodsId);
-
         return miaoshaOrderMapper.selectListByCon(hashMap);
+    }
+
+    public OrderInfo selectByPrimaryKey(long orderId)
+    {
+        return orderInfoMapper.selectByPrimaryKey(orderId);
     }
 
     /** 下订单 order_info miaosha_order*/
@@ -56,4 +60,5 @@ public class OrderService
 
         return orderInfo;
     }
+
 }
