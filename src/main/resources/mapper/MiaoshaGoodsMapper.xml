@@ -6,8 +6,8 @@
     <result column="goods_id" property="goodsId" jdbcType="BIGINT" />
     <result column="miaosha_price" property="miaoshaPrice" jdbcType="DECIMAL" />
     <result column="stock_count" property="stockCount" jdbcType="INTEGER" />
-    <result column="start_date" property="startDate" jdbcType="DATE" />
-    <result column="end_time" property="endTime" jdbcType="DATE" />
+    <result column="start_date" property="startDate" jdbcType="BIGINT" />
+    <result column="end_time" property="endTime" jdbcType="BIGINT" />
   </resultMap>
 
   <sql id="Base_Column_List" >
@@ -31,7 +31,7 @@
       stock_count, start_date, end_time
       )
     values (#{id,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT}, #{miaoshaPrice,jdbcType=DECIMAL}, 
-      #{stockCount,jdbcType=INTEGER}, #{startDate,jdbcType=DATE}, #{endTime,jdbcType=DATE}
+      #{stockCount,jdbcType=INTEGER}, #{startDate,jdbcType=BIGINT}, #{endTime,jdbcType=BIGINT}
       )
   </insert>
 
@@ -71,10 +71,10 @@
         #{stockCount,jdbcType=INTEGER},
       </if>
       <if test="startDate != null" >
-        #{startDate,jdbcType=DATE},
+        #{startDate,jdbcType=BIGINT},
       </if>
       <if test="endTime != null" >
-        #{endTime,jdbcType=DATE},
+        #{endTime,jdbcType=BIGINT},
       </if>
     </trim>
   </insert>
@@ -92,10 +92,10 @@
         stock_count = #{stockCount,jdbcType=INTEGER},
       </if>
       <if test="startDate != null" >
-        start_date = #{startDate,jdbcType=DATE},
+        start_date = #{startDate,jdbcType=BIGINT},
       </if>
       <if test="endTime != null" >
-        end_time = #{endTime,jdbcType=DATE},
+        end_time = #{endTime,jdbcType=BIGINT},
       </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
@@ -106,8 +106,8 @@
     set goods_id = #{goodsId,jdbcType=BIGINT},
       miaosha_price = #{miaoshaPrice,jdbcType=DECIMAL},
       stock_count = #{stockCount,jdbcType=INTEGER},
-      start_date = #{startDate,jdbcType=DATE},
-      end_time = #{endTime,jdbcType=DATE}
+      start_date = #{startDate,jdbcType=BIGINT},
+      end_time = #{endTime,jdbcType=BIGINT}
     where id = #{id,jdbcType=BIGINT}
   </update>
 
@@ -129,10 +129,10 @@
       and stock_count = #{stockCount,jdbcType=INTEGER}
     </if>
     <if test="startDate != null">
-      and start_date = #{startDate,jdbcType=DATE}
+      and start_date = #{startDate,jdbcType=BIGINT}
     </if>
     <if test="endTime != null">
-      and end_time = #{endTime,jdbcType=DATE}
+      and end_time = #{endTime,jdbcType=BIGINT}
     </if>
   </select>
 

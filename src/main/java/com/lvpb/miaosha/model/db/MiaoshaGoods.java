@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -13,6 +12,6 @@ public class MiaoshaGoods {
     private Long goodsId;
     private BigDecimal miaoshaPrice;
     private Integer stockCount;
-    private Date startDate;
-    private Date endTime;
+    private Long startDate;
+    private Long endTime;
 }

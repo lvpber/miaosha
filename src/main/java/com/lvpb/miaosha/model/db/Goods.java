@@ -2,12 +2,13 @@ package com.lvpb.miaosha.model.db;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
-import java.util.Date;
 
 @Setter
 @Getter
+@ToString
 public class Goods {
     private Long id;
     private String goodsName;
@@ -18,6 +19,6 @@ public class Goods {
     private String goodsDetail;
     private BigDecimal miaoshaPrice;
     private Integer stockCount;
-    private Date startDate;
-    private Date endTime;
+    private Long startDate;
+    private Long endTime;
 }

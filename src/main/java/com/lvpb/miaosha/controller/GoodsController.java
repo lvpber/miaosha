@@ -4,8 +4,10 @@ import com.lvpb.miaosha.model.db.Goods;
 import com.lvpb.miaosha.model.db.MiaoshaUser;
 import com.lvpb.miaosha.model.redis.BasePrefix;
 import com.lvpb.miaosha.model.redis.GoodsKey;
+import com.lvpb.miaosha.model.result.Result;
 import com.lvpb.miaosha.service.GoodsService;
 import com.lvpb.miaosha.utils.RedisOperator;
+import com.lvpb.miaosha.vo.GoodsDetailVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -70,8 +72,6 @@ public class GoodsController
                          Model model,MiaoshaUser miaoshaUser)
     {
         model.addAttribute("user",miaoshaUser);
-        List<Goods> goods = goodsService.selectAll();
-        model.addAttribute("goodsList",goods);
 
         /**
          * 如果redis中存在该页面的缓存，就直接从redis中获取缓存页面，返回
@@ -82,6 +82,9 @@ public class GoodsController
             return html;
         }
 
+        List<Goods> goods = goodsService.selectAll();
+        model.addAttribute("goodsList",goods);
+
         //手动渲染 入缓存
         html = viewResolverManual(request,response,model,
                 GoodsKey.getGoodsList,
@@ -91,32 +94,86 @@ public class GoodsController
         return html;
     }
 
-    /** URL 缓存 */
-    @RequestMapping(value="/to_detail/{goodsId}", produces="text/html", method = RequestMethod.GET)
-    @ResponseBody
-    public String toDetail(HttpServletRequest request,
-                           HttpServletResponse response,
-                           Model model, MiaoshaUser miaoshaUser,
-                           @PathVariable("goodsId") long goodsId)
-    {
-        // 取缓存
-        String html = redisOperator.get(GoodsKey.getGoodsDetail,""+goodsId,String.class);
-        if(!StringUtils.isEmpty(html))
-        {
-            return html;
-        }
+    /** URL 缓存 旧，没有采用前后端分离的技术，用于日后学习观看差别 */
+//    @RequestMapping(value="/to_detail/{goodsId}", produces="text/html", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String toDetail(HttpServletRequest request,
+//                           HttpServletResponse response,
+//                           Model model, MiaoshaUser miaoshaUser,
+//                           @PathVariable("goodsId") long goodsId)
+//    {
+//        // 取缓存
+//        String html = redisOperator.get(GoodsKey.getGoodsDetail,""+goodsId,String.class);
+//        if(!StringUtils.isEmpty(html))
+//        {
+//            return html;
+//        }
+//
+//        //手动渲染
+//        model.addAttribute("user",miaoshaUser);
+//        Goods goods = goodsService.selectByPrimaryKey(goodsId);
+//
+//        long startAt = goods.getStartDate().getTime();
+//        long endAt = goods.getEndTime().getTime();
+//
+//        long now = System.currentTimeMillis();
+//
+//        int miaoshaStatus = 0;
+//        int remainSeconds = 0;
+//
+//        if(now < startAt)
+//        {
+//            //秒杀未开始 倒计时
+//            miaoshaStatus = 0;
+//            remainSeconds = (int)(startAt - now)/1000;
+//        }
+//        else if(now > endAt)
+//        {
+//            //秒杀结束
+//            miaoshaStatus = 2;
+//            remainSeconds = -1;
+//        }
+//        else
+//        {
+//            //正在进行秒杀
+//            miaoshaStatus = 1;
+//            remainSeconds = 0;
+//        }
+//
+//        model.addAttribute("goods",goods);
+//        model.addAttribute("miaoshaStatus",miaoshaStatus);
+//        model.addAttribute("remainSeconds",remainSeconds);
+//
+//        //手动渲染 入缓存
+//        html = viewResolverManual(request,response,model,
+//                                  GoodsKey.getGoodsDetail,
+//                             ""+goodsId,
+//                         "goods_detail");
+//
+//        return html;
+//    }
 
-        //手动渲染
-        model.addAttribute("user",miaoshaUser);
+    /** URL 缓存 */
+    @RequestMapping(value="/detail/{goodsId}", method = RequestMethod.GET)
+    @ResponseBody
+    public Result<GoodsDetailVo> goodsDetail(HttpServletRequest request,
+                                          HttpServletResponse response,
+                                          Model model, MiaoshaUser miaoshaUser,
+                                          @PathVariable("goodsId") long goodsId)
+    {
         Goods goods = goodsService.selectByPrimaryKey(goodsId);
 
-        long startAt = goods.getStartDate().getTime();
-        long endAt = goods.getEndTime().getTime();
+        long startAt = goods.getStartDate();
+        long endAt = goods.getEndTime();
 
         long now = System.currentTimeMillis();
 
         int miaoshaStatus = 0;
         int remainSeconds = 0;
+
+        System.out.println("当前时间 " + now);
+        System.out.println("秒杀开始时间 " + startAt);
+        System.out.println("秒杀结束时间 " + endAt);
 
         if(now < startAt)
         {
@@ -137,18 +194,13 @@ public class GoodsController
             remainSeconds = 0;
         }
 
-        model.addAttribute("goods",goods);
-        model.addAttribute("miaoshaStatus",miaoshaStatus);
-        model.addAttribute("remainSeconds",remainSeconds);
-
-        //手动渲染 入缓存
-        html = viewResolverManual(request,response,model,
-                                  GoodsKey.getGoodsDetail,
-                             ""+goodsId,
-                         "goods_detail");
-
-
-        return html;
+        GoodsDetailVo goodsDetailVo = new GoodsDetailVo();
+        goodsDetailVo.setGoods(goods);
+        goodsDetailVo.setMiaoshaStatus(miaoshaStatus);
+        goodsDetailVo.setRemainSeconds(remainSeconds);
+        goodsDetailVo.setMiaoshaUser(miaoshaUser);
+        Result result = Result.success(goodsDetailVo);
+        return result;
     }
 
 
