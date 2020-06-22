@@ -58,8 +58,9 @@ public class MiaoshaController
 //
 //        //判断是否已经秒杀到了 防止一个人秒杀了多个商品 从订单中查
 //        //select from miaoshaorder where userid = ? and goodsId = ?
-//        List<MiaoshaOrder> miaoshaOrders = orderService.selectListByCon(goodsId,miaoshaUser.getId());
-//        if(miaoshaOrders.size() > 0)
+//        //List<MiaoshaOrder> miaoshaOrders = orderService.selectListByCon(goodsId,miaoshaUser.getId());
+//        MiaoshaOrder miaoshaOrder = orderService.selectMOByGoodsIdAndUserId(goodsId,miaoshaUser.getId());
+//        if(miaoshaOrder != null)
 //        {
 //            //用户已经秒杀过了
 //            model.addAttribute("errmsg", CodeMsg.REPEAT_MIAOSHA.getMsg());
@@ -102,8 +103,8 @@ public class MiaoshaController
 
         //判断是否已经秒杀到了 防止一个人秒杀了多个商品 从订单中查
         //select from miaoshaorder where userid = ? and goodsId = ?
-        List<MiaoshaOrder> miaoshaOrders = orderService.selectMOByGoodsIdAndUserId(goodsId,miaoshaUser.getId());
-        if(miaoshaOrders.size() > 0)
+        MiaoshaOrder miaoshaOrder = orderService.selectMOByGoodsIdAndUserId(goodsId,miaoshaUser.getId());
+        if(miaoshaOrder != null)
         {
             //用户已经秒杀过了
             return Result.error(CodeMsg.REPEAT_MIAOSHA);

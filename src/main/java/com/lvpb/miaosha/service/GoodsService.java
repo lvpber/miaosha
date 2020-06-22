@@ -42,6 +42,7 @@ public class GoodsService
         hashMap.put("goodsId",goods.getId());
         List<MiaoshaGoods> miaoshaGoodsList = miaoshaGoodsMapper.selectListByCon(hashMap);
 
+        //没有找到商品
         if(miaoshaGoodsList.size() <= 0)
         {
             return false;
@@ -51,8 +52,11 @@ public class GoodsService
         if(miaoshaGoods.getStockCount() <= 0)
             return false;
 
-        miaoshaGoods.setStockCount(goods.getStockCount()-1);
-        miaoshaGoodsMapper.updateByPrimaryKeySelective(miaoshaGoods);
+        int ret = miaoshaGoodsMapper.reduceStock(miaoshaGoods.getGoodsId());
+        System.out.println("更新为 " + ret);
+        if(ret <= 0)
+            return false;
+
         return true;
     }
 }

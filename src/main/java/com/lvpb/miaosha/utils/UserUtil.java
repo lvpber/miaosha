@@ -46,7 +46,7 @@ public class UserUtil
 
 
         //登录，生成token
-        String urlString = "http://localhost:8000/login/create_token";
+        String urlString = "http://localhost:8001/login/create_token";
 
         File file = new File("D:/tokens.txt");
         if(file.exists()) {

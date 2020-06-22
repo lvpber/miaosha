@@ -94,27 +94,18 @@ public class GoodsController
         return html;
     }
 
-    /** URL 缓存 旧，没有采用前后端分离的技术，用于日后学习观看差别 */
+    //旧的没有优化的
 //    @RequestMapping(value="/to_detail/{goodsId}", produces="text/html", method = RequestMethod.GET)
-//    @ResponseBody
 //    public String toDetail(HttpServletRequest request,
 //                           HttpServletResponse response,
 //                           Model model, MiaoshaUser miaoshaUser,
 //                           @PathVariable("goodsId") long goodsId)
 //    {
-//        // 取缓存
-//        String html = redisOperator.get(GoodsKey.getGoodsDetail,""+goodsId,String.class);
-//        if(!StringUtils.isEmpty(html))
-//        {
-//            return html;
-//        }
-//
-//        //手动渲染
 //        model.addAttribute("user",miaoshaUser);
 //        Goods goods = goodsService.selectByPrimaryKey(goodsId);
 //
-//        long startAt = goods.getStartDate().getTime();
-//        long endAt = goods.getEndTime().getTime();
+//        long startAt = goods.getStartDate();
+//        long endAt = goods.getEndTime();
 //
 //        long now = System.currentTimeMillis();
 //
@@ -144,16 +135,70 @@ public class GoodsController
 //        model.addAttribute("miaoshaStatus",miaoshaStatus);
 //        model.addAttribute("remainSeconds",remainSeconds);
 //
-//        //手动渲染 入缓存
-//        html = viewResolverManual(request,response,model,
-//                                  GoodsKey.getGoodsDetail,
-//                             ""+goodsId,
-//                         "goods_detail");
-//
-//        return html;
+//        return "goods_detail";
 //    }
 
-    /** URL 缓存 */
+
+    /** URL 缓存 旧，没有采用前后端分离的技术，用于日后学习观看差别 */
+    @RequestMapping(value="/to_detail/{goodsId}", produces="text/html", method = RequestMethod.GET)
+    @ResponseBody
+    public String toDetail(HttpServletRequest request,
+                           HttpServletResponse response,
+                           Model model, MiaoshaUser miaoshaUser,
+                           @PathVariable("goodsId") long goodsId)
+    {
+        // 取缓存
+        String html = redisOperator.get(GoodsKey.getGoodsDetail,""+goodsId,String.class);
+        if(!StringUtils.isEmpty(html))
+        {
+            return html;
+        }
+
+        //手动渲染
+        model.addAttribute("user",miaoshaUser);
+        Goods goods = goodsService.selectByPrimaryKey(goodsId);
+
+        long startAt = goods.getStartDate();
+        long endAt = goods.getEndTime();
+
+        long now = System.currentTimeMillis();
+
+        int miaoshaStatus = 0;
+        int remainSeconds = 0;
+
+        if(now < startAt)
+        {
+            //秒杀未开始 倒计时
+            miaoshaStatus = 0;
+            remainSeconds = (int)(startAt - now)/1000;
+        }
+        else if(now > endAt)
+        {
+            //秒杀结束
+            miaoshaStatus = 2;
+            remainSeconds = -1;
+        }
+        else
+        {
+            //正在进行秒杀
+            miaoshaStatus = 1;
+            remainSeconds = 0;
+        }
+
+        model.addAttribute("goods",goods);
+        model.addAttribute("miaoshaStatus",miaoshaStatus);
+        model.addAttribute("remainSeconds",remainSeconds);
+
+        //手动渲染 入缓存
+        html = viewResolverManual(request,response,model,
+                                  GoodsKey.getGoodsDetail,
+                             ""+goodsId,
+                         "goods_detail");
+
+        return html;
+    }
+
+    /** 前端静态页面通过ajax向后端发送数据请求，获取后端数据，前后端分离优化 */
     @RequestMapping(value="/detail/{goodsId}", method = RequestMethod.GET)
     @ResponseBody
     public Result<GoodsDetailVo> goodsDetail(MiaoshaUser miaoshaUser,@PathVariable("goodsId") long goodsId)
