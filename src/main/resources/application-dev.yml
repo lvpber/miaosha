@@ -53,3 +53,25 @@ spring:
         max-active: 10
         max-idle: 10
         max-wait: 3
+
+  #RabbitMq
+  rabbitmq:
+    host: 192.168.0.67
+    port: 5672
+    username: admin
+    password: rabbitmq2333
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 10
+        max-concurrency: 10
+        prefetch: 1 #每次取出几个
+        auto-startup: true
+        default-requeue-rejected: true
+    template:
+      retry:
+        enabled: true           #没写进去就重试
+        initial-interval: 1000  #重试初始等待时间1s
+        max-attempts: 3         #最大尝试次数3
+        max-interval: 10000     #最大间隔时间10s
+        multiplier: 1.0         #每次重试的时间 = 上一次重试的时间 * 该参数
