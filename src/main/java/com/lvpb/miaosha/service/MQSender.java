@@ -22,7 +22,7 @@ public class MQSender
 
     private static Logger log = LoggerFactory.getLogger(MQSender.class);
 
-    private void sendMiaoshaMessage(MiaoshaMessage miaoshaMessage)
+    public void sendMiaoshaMessage(MiaoshaMessage miaoshaMessage)
     {
         String msg = gson.toJson(miaoshaMessage);
         log.info("send miaoshaMessage : " + miaoshaMessage);

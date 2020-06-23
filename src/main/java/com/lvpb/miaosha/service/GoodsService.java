@@ -59,4 +59,20 @@ public class GoodsService
 
         return true;
     }
+
+    public int updateSelective(Goods goods)
+    {
+        HashMap<String,Object> hashMap = new HashMap<>();
+        hashMap.put("goodsId",goods.getId());
+        List<MiaoshaGoods> miaoshaGoods = miaoshaGoodsMapper.selectListByCon(hashMap);
+        if(miaoshaGoods.size() > 0)
+        {
+            MiaoshaGoods miaoshaGoods1 = new MiaoshaGoods();
+            miaoshaGoods1.setId(miaoshaGoods.get(0).getId());
+            miaoshaGoods1.setStockCount(goods.getStockCount());
+            return miaoshaGoodsMapper.updateByPrimaryKeySelective(miaoshaGoods1);
+        }
+
+        return 0;
+    }
 }
