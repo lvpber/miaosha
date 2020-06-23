@@ -30,10 +30,6 @@ public class MiaoshaService
             OrderInfo orderInfo = orderService.createOrder(miaoshaUser,goods);
             return orderInfo;
         }
-        else
-        {
-
-        }
         return null;
     }
 }

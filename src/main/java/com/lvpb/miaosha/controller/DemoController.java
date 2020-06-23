@@ -7,6 +7,7 @@ import com.lvpb.miaosha.model.db.OrderInfo;
 import com.lvpb.miaosha.model.redis.UserKey;
 import com.lvpb.miaosha.model.result.Result;
 import com.lvpb.miaosha.model.result.User;
+import com.lvpb.miaosha.service.MQSender;
 import com.lvpb.miaosha.utils.RedisOperator;
 import com.lvpb.miaosha.utils.UserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,4 +110,40 @@ public class DemoController
         userUtil.createUser(5000);
         return "success";
     }
+
+    // 下面的代码是用来学习rabbitmq的
+//    @Autowired
+//    private MQSender mqSender;
+//
+//    @RequestMapping(value = "/mqTest")
+//    @ResponseBody
+//    public Result<String> mqTest()
+//    {
+//        mqSender.send("hello mq");
+//        return Result.success("success");
+//    }
+//
+//    @RequestMapping(value = "/mqTopicTest")
+//    @ResponseBody
+//    public Result<String> mqTopicTest()
+//    {
+//        mqSender.sendTopic("hello mq");
+//        return Result.success("success");
+//    }
+//
+//    @RequestMapping(value = "/mqFauoutTest")
+//    @ResponseBody
+//    public Result<String> mqFauoutTest()
+//    {
+//        mqSender.sendFanout("hello fauout");
+//        return Result.success("success");
+//    }
+//
+//    @RequestMapping(value = "/mqHeaderTest")
+//    @ResponseBody
+//    public Result<String> mqHeaderTest()
+//    {
+//        mqSender.sendHeaders("hello headers");
+//        return Result.success("success");
+//    }
 }
