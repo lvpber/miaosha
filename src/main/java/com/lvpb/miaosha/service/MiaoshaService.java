@@ -8,10 +8,14 @@ import com.lvpb.miaosha.model.redis.MiaoshaKey;
 import com.lvpb.miaosha.utils.MD5Util;
 import com.lvpb.miaosha.utils.RedisOperator;
 import com.lvpb.miaosha.utils.UUIDUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
@@ -28,6 +32,8 @@ public class MiaoshaService
 
     @Autowired
     private RedisOperator redisOperator;
+
+    private static Logger log = LoggerFactory.getLogger(MiaoshaService.class);
 
     //减库存 -- 下订单 -- 写入秒杀订单 这是一个事务操作，所以要放到一个方法中执行
     @Transactional
@@ -121,8 +127,10 @@ public class MiaoshaService
     {
         if(miaoshaUser == null || goodsId <= 0)
             return null;
+        /** 定义宽度高度 */
         int width = 80;
         int height = 32;
+
         //create the image
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics g = image.getGraphics();
@@ -146,10 +154,68 @@ public class MiaoshaService
         g.setFont(new Font("Candara", Font.BOLD, 24));
         g.drawString(verifyCode, 8, 24);
         g.dispose();
+
         //把验证码存到redis中
         int rnd = calc(verifyCode);
-        redisService.set(MiaoshaKey.getMiaoshaVerifyCode, user.getNickname()+","+goodsId, rnd);
+        log.info("生成的公式 : " + verifyCode + " | 公式的结果 ： " + rnd);
+
+        /**
+         * key = MiaoshaKey:vc{uId_gId}
+         * value = 验证码的正确结果
+         * */
+        redisOperator.set(MiaoshaKey.getMiaoshaVerifyCode, miaoshaUser.getId()+"_"+goodsId, rnd);
         //输出图片
         return image;
+    }
+
+    /**
+     *  计算生成的表达式的结果
+     * */
+    private static int calc(String verifyCode)
+    {
+        try
+        {
+            ScriptEngineManager manager = new ScriptEngineManager();
+            ScriptEngine engine = manager.getEngineByName("JavaScript");
+            return (Integer)engine.eval(verifyCode);
+        }
+        catch (Exception e)
+        {
+            return 0;
+        }
+    }
+
+//    public static void main(String args[])
+//    {
+//        System.out.println(calc("3+8-1"));
+//    }
+
+    private static char[] ops = new char[]{'+','-','*'};
+
+    /** 生成验证码
+     *  随机 + - *
+     * */
+    private static String generateVerifyCode(Random rdm)
+    {
+        int num1 = rdm.nextInt(10);
+        int num2 = rdm.nextInt(10);
+        int num3 = rdm.nextInt(10);
+        char op1 = ops[rdm.nextInt(3)];  // 0 1 2
+        char op2 = ops[rdm.nextInt(3)];
+        String exp = "" + num1 + op1 + num2 + op2 + num3;
+        return exp;
+    }
+
+    /** 用来验证验证码结果，验证成功就返回正确的path */
+    public boolean checkVerifyCode(MiaoshaUser miaoshaUser, long goodsId, int verifyCode)
+    {
+        if(miaoshaUser == null || goodsId <= 0)
+            return false;
+        Integer codeOld = redisOperator.get(MiaoshaKey.getMiaoshaVerifyCode,""+miaoshaUser.getId()+"_"+goodsId,Integer.class);
+        if (codeOld == null || codeOld - verifyCode != 0)
+            return false;
+        /** 从redis中删除，防止刷新还可以用 */
+        redisOperator.delete(MiaoshaKey.getMiaoshaVerifyCode,""+miaoshaUser.getId()+"_"+goodsId);
+        return true;
     }
 }

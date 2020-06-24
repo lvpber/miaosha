@@ -1,5 +1,6 @@
 package com.lvpb.miaosha.config;
 
+import com.lvpb.miaosha.access.UserContext;
 import com.lvpb.miaosha.model.db.MiaoshaUser;
 import com.lvpb.miaosha.service.MiaoshaUserService;
 import org.apache.commons.lang3.StringUtils;
@@ -42,40 +43,53 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver
      * @return
      * @throws Exception
      */
+    // 旧的方法，没有采用拦截器 注释掉为了日后学习使用
+//    @Override
+//    public Object resolveArgument(MethodParameter methodParameter,
+//                                  ModelAndViewContainer modelAndViewContainer,
+//                                  NativeWebRequest nativeWebRequest,
+//                                  WebDataBinderFactory webDataBinderFactory) throws Exception {
+//        HttpServletResponse response = nativeWebRequest.getNativeResponse(HttpServletResponse.class);
+//        HttpServletRequest request = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
+//
+//        String paramToken = request.getParameter(MiaoshaUserService.COOKIE_NAME_TOKEN);
+//        String cookieToken = getCookieValue(request,MiaoshaUserService.COOKIE_NAME_TOKEN);
+//
+//        if(StringUtils.isEmpty(cookieToken) && StringUtils.isEmpty(paramToken))
+//        {
+//            System.out.println("没有cookie参数");
+//            return null;
+//        }
+//        String token = StringUtils.isEmpty(paramToken)?cookieToken:paramToken;
+//        MiaoshaUser miaoshaUser = miaoshaUserService.getByToken(response,token);
+//        System.out.println("this is aop and user is : " + miaoshaUser + "and the token is " + token);
+//        return miaoshaUser;
+//    }
+//
+//    private String getCookieValue(HttpServletRequest request, String cookieNameToken)
+//    {
+//        Cookie[] cookies = request.getCookies();
+//        if(cookies == null || cookies.length <= 0)
+//            return null;
+//        for(Cookie cookie:cookies)
+//        {
+//            if(cookie.getName().equals(cookieNameToken))
+//            {
+//                return cookie.getValue();
+//            }
+//        }
+//        return null;
+//    }
+
+
+
+    // 我们在AccessInterceptor这个拦截器中获取到了用户信息并写进了threadLocal中 ,所以在该方法中直接获取就行了
     @Override
     public Object resolveArgument(MethodParameter methodParameter,
                                   ModelAndViewContainer modelAndViewContainer,
                                   NativeWebRequest nativeWebRequest,
-                                  WebDataBinderFactory webDataBinderFactory) throws Exception {
-        HttpServletResponse response = nativeWebRequest.getNativeResponse(HttpServletResponse.class);
-        HttpServletRequest request = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
-
-        String paramToken = request.getParameter(MiaoshaUserService.COOKIE_NAME_TOKEN);
-        String cookieToken = getCookieValue(request,MiaoshaUserService.COOKIE_NAME_TOKEN);
-
-        if(StringUtils.isEmpty(cookieToken) && StringUtils.isEmpty(paramToken))
-        {
-            System.out.println("没有cookie参数");
-            return null;
-        }
-        String token = StringUtils.isEmpty(paramToken)?cookieToken:paramToken;
-        MiaoshaUser miaoshaUser = miaoshaUserService.getByToken(response,token);
-        System.out.println("this is aop and user is : " + miaoshaUser + "and the token is " + token);
-        return miaoshaUser;
-    }
-
-    private String getCookieValue(HttpServletRequest request, String cookieNameToken)
+                                  WebDataBinderFactory webDataBinderFactory) throws Exception
     {
-        Cookie[] cookies = request.getCookies();
-        if(cookies == null || cookies.length <= 0)
-            return null;
-        for(Cookie cookie:cookies)
-        {
-            if(cookie.getName().equals(cookieNameToken))
-            {
-                return cookie.getValue();
-            }
-        }
-        return null;
+        return UserContext.getUser();
     }
 }

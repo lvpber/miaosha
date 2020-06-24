@@ -17,4 +17,8 @@ public class MiaoshaKey extends BasePrefix
     // 生成一个随机字符串path，下一次访问时将这个字符串带上，判断字符串的正确性就允许用户访问了，
     // 这个生成的字符串就放在redis中，方便日后查询
     public static MiaoshaKey getMiaoshaPath = new MiaoshaKey(60,"mp");
+
+    /** 生成的验证码，后端将其写进redis，日后检验的时候从redis获取 */
+    public static MiaoshaKey getMiaoshaVerifyCode = new MiaoshaKey(300,"vc");
+
 }

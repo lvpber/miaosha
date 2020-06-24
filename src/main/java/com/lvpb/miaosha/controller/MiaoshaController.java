@@ -1,9 +1,11 @@
 package com.lvpb.miaosha.controller;
 
+import com.lvpb.miaosha.access.AccessLimit;
 import com.lvpb.miaosha.model.db.Goods;
 import com.lvpb.miaosha.model.db.MiaoshaOrder;
 import com.lvpb.miaosha.model.db.MiaoshaUser;
 import com.lvpb.miaosha.model.rabbitmq.MiaoshaMessage;
+import com.lvpb.miaosha.model.redis.AccessKey;
 import com.lvpb.miaosha.model.redis.GoodsKey;
 import com.lvpb.miaosha.model.redis.MiaoshaKey;
 import com.lvpb.miaosha.model.redis.OrderKey;
@@ -22,7 +24,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -268,23 +274,24 @@ public class MiaoshaController implements InitializingBean
     /**
      *  访问地址隐藏
      *  访问需要加一个前缀，这个url的目的就是生成一个随机UUID，供前端使用
+     *  没有添加verifycode
      */
-    @RequestMapping(value = "/path",method = RequestMethod.GET)
-    @ResponseBody
-    public Result<String> getMiaoshaPath(Model model, MiaoshaUser miaoshaUser,
-                                      @RequestParam("goodsId") long goodsId)
-    {
-        model.addAttribute("user",miaoshaUser);
-        if(miaoshaUser==null)
-        {
-            // 用户session失效
-            return Result.error(CodeMsg.SESSION_ERROR);
-        }
-
-        String path  = miaoshaService.createMiaoshaPath(miaoshaUser,goodsId);
-
-        return Result.success(path);
-    }
+//    @RequestMapping(value = "/path",method = RequestMethod.GET)
+//    @ResponseBody
+//    public Result<String> getMiaoshaPath(Model model, MiaoshaUser miaoshaUser,
+//                                      @RequestParam("goodsId") long goodsId)
+//    {
+//        model.addAttribute("user",miaoshaUser);
+//        if(miaoshaUser==null)
+//        {
+//            // 用户session失效
+//            return Result.error(CodeMsg.SESSION_ERROR);
+//        }
+//
+//        String path  = miaoshaService.createMiaoshaPath(miaoshaUser,goodsId);
+//
+//        return Result.success(path);
+//    }
 
     @RequestMapping(value = "/{path}/do_miaosha",method = RequestMethod.POST)
     @ResponseBody
@@ -340,20 +347,131 @@ public class MiaoshaController implements InitializingBean
      */
     @RequestMapping(value = "/verifyCode",method = RequestMethod.GET)
     @ResponseBody
-    public Result<String> verifyCode(Model model, MiaoshaUser miaoshaUser,
-                                         @RequestParam("goodsId") long goodsId)
+    public Result<String> verifyCode(HttpServletResponse response,
+                                     MiaoshaUser miaoshaUser,
+                                     @RequestParam("goodsId") long goodsId)
     {
-        model.addAttribute("user",miaoshaUser);
         if(miaoshaUser==null)
         {
             // 用户session失效
             return Result.error(CodeMsg.SESSION_ERROR);
         }
 
+        // 生成验证码的图片，并将验证码的结果写进redis中后续由于验证
         BufferedImage image = miaoshaService.createVerifyCode(miaoshaUser,goodsId);
+
+        try
+        {
+            OutputStream outputStream = response.getOutputStream();
+            ImageIO.write(image,"JPEG",outputStream);
+            outputStream.flush();
+            outputStream.close();
+            return null;
+        }
+        catch(Exception e)
+        {
+            return Result.error(CodeMsg.MIAOSHA_FAIL);
+        }
+    }
+
+    // 没有做限流防刷
+//    @RequestMapping(value = "/path",method = RequestMethod.GET)
+//    @ResponseBody
+//    public Result<String> getMiaoshaPath(Model model, MiaoshaUser miaoshaUser,
+//                                         @RequestParam("goodsId") long goodsId,
+//                                         @RequestParam("verifyCode") int verifyCode)
+//    {
+//        model.addAttribute("user",miaoshaUser);
+//        if(miaoshaUser==null)
+//        {
+//            // 用户session失效
+//            return Result.error(CodeMsg.SESSION_ERROR);
+//        }
+//
+//        //check
+//        boolean check = miaoshaService.checkVerifyCode(miaoshaUser,goodsId,verifyCode);
+//        if(!check)
+//        {
+//            return Result.error(CodeMsg.REQUEST_ILLEGAL);
+//        }
+//
+//        String path  = miaoshaService.createMiaoshaPath(miaoshaUser,goodsId);
+//
+//        return Result.success(path);
+//    }
+
+    // 添加限流防刷 在URL内部实现
+//    @RequestMapping(value = "/path",method = RequestMethod.GET)
+//    @ResponseBody
+//    public Result<String> getMiaoshaPath(HttpServletRequest request,
+//                                         MiaoshaUser miaoshaUser,
+//                                         @RequestParam("goodsId") long goodsId,
+//                                         @RequestParam(value = "verifyCode",defaultValue = "0") int verifyCode)
+//    {
+//        if(miaoshaUser==null)
+//        {
+//            // 用户session失效
+//            return Result.error(CodeMsg.SESSION_ERROR);
+//        }
+//
+//        // 用户信息获取之后先判断是否短时间内大量刷秒杀请求
+//        String URL = request.getRequestURI();
+//        String key = URL + "_" + miaoshaUser.getId();
+//        Integer count = redisOperator.get(AccessKey.access,key,Integer.class);
+//        if(count == null)
+//        {
+//            redisOperator.set(AccessKey.access,key,1);
+//        }
+//        else if(count < 5)
+//        {
+//            redisOperator.incr(AccessKey.access,key,1);
+//        }
+//        else
+//        {
+//            return Result.error(CodeMsg.ACCESS_LIMIT);
+//        }
+//
+//        //check
+//        boolean check = miaoshaService.checkVerifyCode(miaoshaUser,goodsId,verifyCode);
+//        if(!check)
+//        {
+//            return Result.error(CodeMsg.REQUEST_ILLEGAL);
+//        }
+//
+//        String path  = miaoshaService.createMiaoshaPath(miaoshaUser,goodsId);
+//
+//        return Result.success(path);
+//    }
+
+    /**
+     *  通过aop实现业务拦截，在方法之上添加注解，限制用户在多少秒之内访问多少次，同时要求是否需要登录
+     *  seconds : 时间限制
+     *  maxCount : 最大访问次数
+     *  needLogin : 是否需要登陆
+     * */
+    @AccessLimit(seconds=5,maxCount=5,needLogin=true)
+    @RequestMapping(value = "/path",method = RequestMethod.GET)
+    @ResponseBody
+    public Result<String> getMiaoshaPath(HttpServletRequest request,
+                                         MiaoshaUser miaoshaUser,
+                                         @RequestParam("goodsId") long goodsId,
+                                         @RequestParam(value = "verifyCode",defaultValue = "0") int verifyCode)
+    {
+        if(miaoshaUser==null)
+        {
+            // 用户session失效
+            return Result.error(CodeMsg.SESSION_ERROR);
+        }
+
+        //check
+        boolean check = miaoshaService.checkVerifyCode(miaoshaUser,goodsId,verifyCode);
+        if(!check)
+        {
+            return Result.error(CodeMsg.REQUEST_ILLEGAL);
+        }
+
         String path  = miaoshaService.createMiaoshaPath(miaoshaUser,goodsId);
 
         return Result.success(path);
     }
-
 }
