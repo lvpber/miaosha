@@ -43,6 +43,7 @@ public class AccessInterceptor extends HandlerInterceptorAdapter
             throws Exception {
         if(handler instanceof HandlerMethod)
         {
+            log.info("hey I am in your interceptor");
             // 获取当前用户信息,放置在一个ThreadLocal中
             MiaoshaUser miaoshaUser = getMiaoshaUser(request,response);
             UserContext.setUser(miaoshaUser);
@@ -53,6 +54,7 @@ public class AccessInterceptor extends HandlerInterceptorAdapter
             AccessLimit accessLimit = handlerMethod.getMethodAnnotation(AccessLimit.class);
             if(accessLimit == null)
             {
+                log.info("accessLimit is null");
                 return true;    //没有限制
             }
 
@@ -133,8 +135,9 @@ public class AccessInterceptor extends HandlerInterceptorAdapter
 
     private void render(HttpServletResponse response, CodeMsg codeMsg) throws Exception
     {
+        response.setContentType("application/json;charset=UTF-8");
         OutputStream outputStream = response.getOutputStream();
-        String str = gson.toJson(codeMsg);
+        String str = gson.toJson(Result.error(codeMsg));
         outputStream.write(str.getBytes("UTF-8"));
         outputStream.flush();
         outputStream.close();
